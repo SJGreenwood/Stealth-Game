@@ -99,6 +99,7 @@ class Client:
             keys[pygame.K_LSHIFT],
             keys[pygame.K_e],
             keys[pygame.K_f],
+            keys[pygame.K_b],
         ]
 
     def update(self):
@@ -116,11 +117,12 @@ class Client:
         # Draw the map
         self.screen.blit(self.mapInfo.backgroundImg, -self.cameraPos)
 
-        # Draw all sprites
+        # Draw all sprites if they have an image
         for sprite in self.objectInfo:
-            image = self.spriteImages[sprite["image"]]
-            image = pygame.transform.rotate(image, sprite["angle"])
-            self.screen.blit(image, Vector2(sprite["position"])-self.cameraPos)
+            if sprite["image"] != "None":
+                image = self.spriteImages[sprite["image"]]
+                image = pygame.transform.rotate(image, sprite["angle"])
+                self.screen.blit(image, Vector2(sprite["position"])-self.cameraPos)
 
         self.screen.blit(self.mapInfo.topImg, -self.cameraPos)
 
@@ -169,14 +171,12 @@ class Client:
         # Draw the faded walls mask onto the final mask
         self.mask.blit(fadedWallMask, -cameraPos)
 
-        # print(f"Time: {et - st}")
-
     def loadSpriteImages(self):
         """Load all character images"""
         characters = ["hitman1", "manBlue", "manBrown", "manOld", "soldier1", "survivor1", "womanGreen"]
         variations = ["gun", "hold", "machine", "reload", "silencer", "stand"]
 
-        objects = ["flatScreen", "moniter", "oldTV_beige", "oldTV_black", "oldTV_wood", "bullet"]
+        objects = ["flatScreen", "moniter", "oldTV_beige", "oldTV_black", "oldTV_wood", "bullet", "bag"]
 
         imageDirectory = path.join(self.scriptDir, "images")
 

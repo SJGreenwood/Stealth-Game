@@ -8,7 +8,7 @@ from settings import *
 def collide_rect(player, wall):
     return player.col_rect.colliderect(wall.rect)
 
-def rotateVector2(vector2, angle):
+def rotateVector2(vector2, angle) -> Vector2:
     vector2 = Vector2(vector2)
     passedVector2 = Vector2(vector2)
 
@@ -132,10 +132,10 @@ class Player(Character):
 
         self.holdingObject = None
 
-    def get_input(self, input):
+    def get_input(self, input) -> None:
         self.input = input
 
-    def updateVelocity(self):
+    def updateVelocity(self) -> None:
         if self.input:
             speedMultiplier = 1.5 if self.input[5] else 1
 
@@ -155,7 +155,7 @@ class Player(Character):
             if any(self.input[4]):
                 self.velocity += rotateVector2(Vector2(0, CHARACTER_SPEED*3/4), -self.angle) * speedMultiplier
 
-    def getCharacterRotation(self):
+    def getCharacterRotation(self) -> float:
         if not self.input:
             return 0
 
@@ -168,7 +168,7 @@ class Player(Character):
 
         return False
 
-    def pickupClosestObject(self):
+    def pickupClosestObject(self) -> None:
         # Get the closest object
         closestObject = None
         closestDistance = 0
@@ -186,7 +186,7 @@ class Player(Character):
 
         self.imageKey = "hold"
 
-    def update(self):
+    def update(self) -> None:
         super().update()
 
         # Check if your item hasn't been stolen
@@ -195,6 +195,10 @@ class Player(Character):
             self.imageKey = "stand"
 
         if self.input:
+            # Place bags
+            if self.input[8] and not self.prevInput[8]:
+                Bag(self.game, rotateVector2(Vector2(31, 0), -self.angle) + Vector2(self.rect.center), self.angle + 90)
+
             # Pickup and put down objects
             if self.input[6] and not self.prevInput[6]:
                 if not self.holdingObject:
@@ -353,6 +357,7 @@ class Object(pygame.sprite.Sprite):
         self.position = Vector2(position)
         self.angle = angle
 
+        self.originalImageName = imageName
         self.imageName = imageName
 
         self.originalImage = image
@@ -384,11 +389,33 @@ class Object(pygame.sprite.Sprite):
         self.heldBy = character
 
         self.collider.kill()
+
+        self.imageName = self.originalImageName
     
     def putDown(self):
         self.heldBy = None
 
-        self.collider = Obsticle(self.game, (self.position.x - 5, self.position.y - 5), (10, 10))
+        self.collider = Obsticle(self.game, (self.position.x - 5, self.position.y - 5), (10, 10), True)
+
+        # If near a bag, be put inside of it
+        if type(self) != Bag:
+            closestBag = None
+            closestDistance = 999
+
+            for sprite in self.game.all_sprites:
+                if type(sprite) == Bag:
+                    if not sprite.isFull():
+                        distance = Vector2.magnitude(self.position - sprite.position)
+                        if distance < closestDistance:
+                            closestDistance = distance
+                            closestBag = sprite
+
+            if closestDistance < 50:
+                self.image = pygame.Surface(self.originalImage.get_size())
+                self.pickup(closestBag)
+                closestBag.itemsHeld.append(self)
+
+                self.imageName = "None"
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, game, parent, startPos, angle, range):
@@ -430,3 +457,15 @@ class Bullet(pygame.sprite.Sprite):
 
         if (self.position - self.startPos).magnitude() >= self.range:
             self.kill()
+
+class Bag(Object):
+    def __init__(self, game, position, angle):
+        super().__init__(game, position, angle, game.spriteImgs["bag"], "bag")
+
+        self.itemsHeld = []
+
+        self.maxItems = 5
+
+    def isFull(self) -> bool:
+        """Return true if the bag is full"""
+        return len(self.itemsHeld) >= self.maxItems

@@ -61,7 +61,7 @@ class Server():
 
         # Add all moveable objects
         for sprite in self.game.all_sprites:
-            if type(sprite) in [Object, Bullet]:
+            if isinstance(sprite, (Object, Bullet)):
                 infoList.append(fillDictionary(False, sprite.imageName, list(sprite.rect.topleft), sprite.angle))
 
         return infoList

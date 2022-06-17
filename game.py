@@ -110,7 +110,7 @@ class Game:
         return allCharacterImgs
 
     def loadOtherImages(self):
-        objects = ["flatScreen", "moniter", "oldTV_beige", "oldTV_black", "oldTV_wood", "bullet"]
+        objects = ["flatScreen", "moniter", "oldTV_beige", "oldTV_black", "oldTV_wood", "bullet", "bag"]
 
 
         imageDirectory = path.join(self.scriptDir, "images")
